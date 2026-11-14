@@ -2,6 +2,7 @@ import 'package:mrlgplayer/model/song.dart';
 
 class History extends Song {
   final DateTime viewedAt;
+  final int? historyId;
 
   History({
     required super.id,
@@ -11,6 +12,7 @@ class History extends Song {
     super.artworkUrl,
     required super.websiteUrl,
     required this.viewedAt,
+    this.historyId,
   });
 
   factory History.fromSong({required Song song, required DateTime dateTime}) {

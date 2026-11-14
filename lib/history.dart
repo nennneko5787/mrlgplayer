@@ -63,6 +63,7 @@ class PlayHistory {
           websiteUrl: row["website_url"]! as String,
           viewedAt: DateTime.parse(row["viewed_at"]! as String),
           artworkUrl: row["artwork_url"] as String?,
+          historyId: row["id"] as int,
         ),
       );
     }
@@ -82,6 +83,16 @@ class PlayHistory {
       "artwork_url": history.artworkUrl,
       "website_url": history.websiteUrl,
     });
+  }
+
+  Future<void> deletePlayHistory(History history) async {
+    if (db == null) return;
+
+    await db!.delete(
+      "history",
+      where: "id = ?",
+      whereArgs: [history.historyId],
+    );
   }
 
   Future<void> clearPlayHistory() async {

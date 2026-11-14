@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:mrlgplayer/audio.dart';
 import 'package:mrlgplayer/history.dart';
 import 'package:mrlgplayer/model/history.dart';
+import 'package:share_plus/share_plus.dart';
 
 class HistoryPage extends ConsumerStatefulWidget {
   const HistoryPage({super.key});
@@ -15,6 +16,74 @@ class HistoryPage extends ConsumerStatefulWidget {
 class HistoryPageState extends ConsumerState<HistoryPage> {
   final ScrollController _scrollController = ScrollController();
 
+  void showAllDeleteDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('警告'),
+          content: Text('再生履歴を削除しますか？'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('キャンセル'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+
+                PlayHistory().clearPlayHistory().then((_) => {setState(() {})});
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('再生履歴を削除しました。'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              },
+              child: Text('削除する'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void showDeleteDialog(BuildContext context, History history) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('警告'),
+          content: Text('この曲の再生履歴を削除しますか？'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('キャンセル'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+
+                PlayHistory()
+                    .deletePlayHistory(history)
+                    .then((_) => {setState(() {})});
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('再生履歴を削除しました。'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              },
+              child: Text('削除する'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,37 +93,7 @@ class HistoryPageState extends ConsumerState<HistoryPage> {
         actions: [
           IconButton(
             onPressed: () async {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: Text('警告'),
-                    content: Text('再生履歴を削除しますか？'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: Text('キャンセル'),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-
-                          PlayHistory().clearPlayHistory();
-                          setState(() {});
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('再生履歴を削除しました。'),
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
-                        },
-                        child: Text('削除する'),
-                      ),
-                    ],
-                  );
-                },
-              );
+              showAllDeleteDialog(context);
             },
             icon: Icon(Symbols.delete),
           ),
@@ -114,6 +153,43 @@ class HistoryPageState extends ConsumerState<HistoryPage> {
                                 service: song.service,
                               );
                               Navigator.pop(context);
+                            },
+                            onLongPress: () {
+                              showModalBottomSheet(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return Container(
+                                    padding: EdgeInsets.all(16.0),
+                                    child: Wrap(
+                                      children: <Widget>[
+                                        ListTile(
+                                          leading: Icon(Icons.share),
+                                          title: Text('シェアする'),
+                                          onTap: () {
+                                            Navigator.pop(context);
+                                            SharePlus.instance.share(
+                                              ShareParams(
+                                                uri: Uri.parse(song.websiteUrl),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                        ListTile(
+                                          leading: Icon(Symbols.delete),
+                                          title: Text(
+                                            '削除',
+                                            style: TextStyle(color: Colors.red),
+                                          ),
+                                          onTap: () {
+                                            Navigator.pop(context);
+                                            showDeleteDialog(context, song);
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              );
                             },
                           );
                         },
