@@ -49,6 +49,8 @@ class HomePageState extends ConsumerState<HomePage> {
             border: OutlineInputBorder(),
           ),
           onSubmitted: (url) async {
+            if (url.isEmpty) return;
+
             _controller.clear();
             await AudioManager().loadAudioFromUrl(url);
             setState(() {});
@@ -58,6 +60,8 @@ class HomePageState extends ConsumerState<HomePage> {
           IconButton(
             onPressed: () async {
               final url = _controller.text;
+              if (url.isEmpty) return;
+
               _controller.clear();
               await AudioManager().loadAudioFromUrl(url);
               setState(() {});
