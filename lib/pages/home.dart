@@ -233,21 +233,27 @@ class HomePageState extends ConsumerState<HomePage> {
                   },
                   icon: Icon(Icons.replay_10),
                 ),
-                IconButton(
-                  onPressed: () async {
-                    if (playingBeforeSeek) return;
-
-                    if (AudioManager().player.playing) {
-                      await AudioManager().player.pause();
-                    } else {
-                      await AudioManager().player.play();
-                    }
-                    setState(() {});
-                  },
-                  icon: AudioManager().player.playing
-                      ? Icon(Icons.pause)
-                      : Icon(Icons.play_arrow),
-                ),
+								StreamBuilder<PlayerState>(
+								  stream: AudioManager().player.playerStateStream,
+								  builder: (context, snapshot) {
+								    final playing = snapshot.data?.playing ?? false;
+								
+								    return IconButton(
+								      onPressed: () async {
+								        if (playingBeforeSeek) return;
+								
+								        if (playing) {
+								          await AudioManager().player.pause();
+								        } else {
+								          await AudioManager().player.play();
+								        }
+								      },
+								      icon: playing
+								          ? const Icon(Icons.pause)
+								          : const Icon(Icons.play_arrow),
+								    );
+								  },
+								),
                 IconButton(
                   onPressed: () async {
                     if (AudioManager().player.duration == null) return;
