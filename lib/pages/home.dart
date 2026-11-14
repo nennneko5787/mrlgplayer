@@ -48,11 +48,17 @@ class HomePageState extends ConsumerState<HomePage> {
             labelText: 'ニコニコ動画のURLを入力',
             border: OutlineInputBorder(),
           ),
+          onSubmitted: (url) async {
+            _controller.clear();
+            await AudioManager().loadAudioFromUrl(url);
+            setState(() {});
+          },
         ),
         actions: [
           IconButton(
             onPressed: () async {
               final url = _controller.text;
+              _controller.clear();
               await AudioManager().loadAudioFromUrl(url);
               setState(() {});
             },
