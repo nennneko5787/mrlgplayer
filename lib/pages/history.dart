@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mrlgplayer/audio.dart';
 import 'package:mrlgplayer/history.dart';
@@ -17,7 +18,48 @@ class HistoryPageState extends ConsumerState<HistoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(centerTitle: true, title: const Text("再生履歴")),
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text("再生履歴"),
+        actions: [
+          IconButton(
+            onPressed: () async {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: Text('警告'),
+                    content: Text('再生履歴を削除しますか？'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text('キャンセル'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+
+                          PlayHistory().clearPlayHistory();
+                          setState(() {});
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('再生履歴を削除しました。'),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                        child: Text('削除する'),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+            icon: Icon(Symbols.delete),
+          ),
+        ],
+      ),
       body: FutureBuilder(
         future: PlayHistory().fetchPlayHistory(),
         builder: (BuildContext context, AsyncSnapshot snapshot) {
