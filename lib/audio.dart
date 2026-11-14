@@ -43,7 +43,6 @@ class AudioManager {
   }
 
   Future<void> loadAudioFromUrl(String url) async {
-    ;
     final match = RegExp(
       r"https?://(nico.ms|(?:www\.)?nicovideo.jp\/watch)\/(.*)",
     );
