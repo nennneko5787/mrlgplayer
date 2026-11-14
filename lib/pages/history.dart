@@ -153,6 +153,7 @@ class HistoryPageState extends ConsumerState<HistoryPage> {
                                 service: song.service,
                               );
                               Navigator.pop(context);
+															setState(() {});
                             },
                             onLongPress: () {
                               showModalBottomSheet(
