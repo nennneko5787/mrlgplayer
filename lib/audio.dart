@@ -44,11 +44,12 @@ class AudioManager {
 
   Future<void> loadAudioFromUrl(String url) async {
     final match = RegExp(
-      r"^https?://(?:nico\.ms/([^?#]+)|(?:www\.)?nicovideo\.jp/watch/([^?#]+))(?:[?#].*)?$",
-    );
-    if (match.hasMatch(url)) {
-      final videoId = match.firstMatch(url)![1];
-      await loadAudioFromNiconico(videoId!);
+      r'^https?://(?:nico\.ms/|(?:www\.)?nicovideo\.jp/watch/)([^/?#]+)',
+    ).firstMatch(url);
+
+    if (match != null) {
+      final videoId = match.group(1)!;
+      await loadAudioFromNiconico(videoId);
     }
   }
 
