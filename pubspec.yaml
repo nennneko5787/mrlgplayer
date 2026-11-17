@@ -57,6 +57,12 @@ dependencies:
   path: ^1.9.1
   path_provider: ^2.1.6
   material_symbols_icons: ^4.2960.0
+  riverpod_annotation: ^4.0.8
+  package_info_plus: ^10.2.2
+  flutter_inappwebview: ^6.2.0-beta.3
+  flutter_secure_storage: ^11.2.0
+  dio: ^5.11.1
+  dio_cookie_manager: ^3.5.0
 
 dev_dependencies:
   flutter_test:

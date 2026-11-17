@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:mrlgplayer/audio.dart';
 import 'package:mrlgplayer/history.dart';
 import 'package:mrlgplayer/model/history.dart';
+import 'package:mrlgplayer/model/notifier/playing.dart';
 import 'package:share_plus/share_plus.dart';
 
 class HistoryPage extends ConsumerStatefulWidget {
@@ -147,13 +147,17 @@ class HistoryPageState extends ConsumerState<HistoryPage> {
                             trailing: Text(
                               song.viewedAt.toString().split(".")[0],
                             ),
-                            onTap: () async {
-                              AudioManager().loadAudioFromServiceAndId(
+                            onTap: () {
+                              final notifier = ref.read(
+                                playingProvider.notifier,
+                              );
+
+                              Navigator.pop(context);
+
+                              notifier.loadAudioFromServiceAndId(
                                 id: song.id,
                                 service: song.service,
                               );
-                              Navigator.pop(context);
-															setState(() {});
                             },
                             onLongPress: () {
                               showModalBottomSheet(

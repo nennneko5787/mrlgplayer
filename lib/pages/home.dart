@@ -5,7 +5,9 @@ import 'package:mrlgplayer/audio.dart';
 import 'package:mrlgplayer/pages/drawer.dart';
 import 'package:mrlgplayer/model/position.dart';
 import 'package:marquee/marquee.dart';
+import 'package:mrlgplayer/widgets/lyrics.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:mrlgplayer/model/notifier/playing.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -17,6 +19,7 @@ class HomePage extends ConsumerStatefulWidget {
 class HomePageState extends ConsumerState<HomePage> {
   final TextEditingController _controller = TextEditingController();
   bool playingBeforeSeek = false;
+  bool isLyricsViewOpened = false;
 
   @override
   void dispose() {
@@ -37,11 +40,21 @@ class HomePageState extends ConsumerState<HomePage> {
     return textPainter.didExceedMaxLines;
   }
 
+  Future<void> playAudio(String url) async {
+    if (url.isEmpty) return;
+
+    _controller.clear();
+    await ref.read(playingProvider.notifier).loadAudioFromUrl(url);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final song = ref.watch(playingProvider);
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
+        flexibleSpace: SizedBox(height: MediaQuery.of(context).padding.top),
         title: TextField(
           controller: _controller,
           decoration: InputDecoration(
@@ -49,22 +62,25 @@ class HomePageState extends ConsumerState<HomePage> {
             border: OutlineInputBorder(),
           ),
           onSubmitted: (url) async {
-            if (url.isEmpty) return;
-
-            _controller.clear();
-            await AudioManager().loadAudioFromUrl(url);
-            setState(() {});
+            await playAudio(url);
+          },
+        ),
+        leading: Builder(
+          builder: (BuildContext context) {
+            return IconButton(
+              icon: const Icon(Icons.menu),
+              tooltip: 'メニューを開く',
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+            );
           },
         ),
         actions: [
           IconButton(
             onPressed: () async {
               final url = _controller.text;
-              if (url.isEmpty) return;
-
-              _controller.clear();
-              await AudioManager().loadAudioFromUrl(url);
-              setState(() {});
+              await playAudio(url);
             },
             icon: Icon(Icons.arrow_right),
           ),
@@ -77,21 +93,21 @@ class HomePageState extends ConsumerState<HomePage> {
           mainAxisAlignment: .end,
           crossAxisAlignment: .start,
           children: [
-            Center(
-              child: SizedBox(
-                width: 300,
-                height: 300,
-                child: FittedBox(
-                  fit: BoxFit.cover,
-                  clipBehavior: Clip.hardEdge,
-                  child:
-                      (AudioManager().song != null ||
-                          AudioManager().song?.artworkUrl != null)
-                      ? Image.network(AudioManager().song!.artworkUrl!)
-                      : Image.asset("assets/untitled.png"),
-                ),
-              ),
-            ),
+            (isLyricsViewOpened == true)
+                ? LyricsView()
+                : Center(
+                    child: SizedBox(
+                      width: 300,
+                      height: 300,
+                      child: FittedBox(
+                        fit: BoxFit.cover,
+                        clipBehavior: Clip.hardEdge,
+                        child: (song != null || song?.artworkUrl != null)
+                            ? Image.network(song!.artworkUrl!)
+                            : Image.asset("assets/untitled.png"),
+                      ),
+                    ),
+                  ),
             const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsetsDirectional.symmetric(horizontal: 22),
@@ -100,11 +116,9 @@ class HomePageState extends ConsumerState<HomePage> {
                 child: Row(
                   children: [
                     Expanded(
-                      child:
-                          (AudioManager().song != null &&
-                              AudioManager().song!.title.isNotEmpty)
+                      child: (song != null && song.title.isNotEmpty)
                           ? (isOverFlowed(
-                                  text: AudioManager().song!.title,
+                                  text: song.title,
                                   style: Theme.of(context)
                                       .textTheme
                                       .headlineMedium!
@@ -114,10 +128,8 @@ class HomePageState extends ConsumerState<HomePage> {
                                       40 * 2,
                                 ))
                                 ? Marquee(
-                                    key: Key(
-                                      '${AudioManager().song!.service}_${AudioManager().song!.id}',
-                                    ),
-                                    text: AudioManager().song!.title,
+                                    key: Key('${song.service}_${song.id}'),
+                                    text: song.title,
                                     blankSpace: 100.0,
                                     style: Theme.of(context)
                                         .textTheme
@@ -125,10 +137,8 @@ class HomePageState extends ConsumerState<HomePage> {
                                         .apply(fontWeightDelta: 2),
                                   )
                                 : Text(
-                                    key: Key(
-                                      '${AudioManager().song!.service}_${AudioManager().song!.id}',
-                                    ),
-                                    AudioManager().song!.title,
+                                    key: Key('${song.service}_${song.id}'),
+                                    song.title,
                                     style: Theme.of(context)
                                         .textTheme
                                         .headlineMedium!
@@ -217,6 +227,14 @@ class HomePageState extends ConsumerState<HomePage> {
                       ? Icon(Icons.repeat_on)
                       : Icon(Icons.repeat_one_on),
                 ),
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      isLyricsViewOpened = !isLyricsViewOpened;
+                    });
+                  },
+                  icon: Icon(Icons.lyrics),
+                ),
                 const Spacer(),
                 IconButton(
                   onPressed: () async {
@@ -233,27 +251,27 @@ class HomePageState extends ConsumerState<HomePage> {
                   },
                   icon: Icon(Icons.replay_10),
                 ),
-								StreamBuilder<PlayerState>(
-								  stream: AudioManager().player.playerStateStream,
-								  builder: (context, snapshot) {
-								    final playing = snapshot.data?.playing ?? false;
-								
-								    return IconButton(
-								      onPressed: () async {
-								        if (playingBeforeSeek) return;
-								
-								        if (playing) {
-								          await AudioManager().player.pause();
-								        } else {
-								          await AudioManager().player.play();
-								        }
-								      },
-								      icon: playing
-								          ? const Icon(Icons.pause)
-								          : const Icon(Icons.play_arrow),
-								    );
-								  },
-								),
+                StreamBuilder<PlayerState>(
+                  stream: AudioManager().player.playerStateStream,
+                  builder: (context, snapshot) {
+                    final playing = snapshot.data?.playing ?? false;
+
+                    return IconButton(
+                      onPressed: () async {
+                        if (playingBeforeSeek) return;
+
+                        if (playing) {
+                          await AudioManager().player.pause();
+                        } else {
+                          await AudioManager().player.play();
+                        }
+                      },
+                      icon: playing
+                          ? const Icon(Icons.pause)
+                          : const Icon(Icons.play_arrow),
+                    );
+                  },
+                ),
                 IconButton(
                   onPressed: () async {
                     if (AudioManager().player.duration == null) return;
@@ -272,11 +290,9 @@ class HomePageState extends ConsumerState<HomePage> {
                 const Spacer(),
                 IconButton(
                   onPressed: () async {
-                    if (AudioManager().song == null) return;
+                    if (song == null) return;
                     SharePlus.instance.share(
-                      ShareParams(
-                        uri: Uri.parse(AudioManager().song!.websiteUrl),
-                      ),
+                      ShareParams(uri: Uri.parse(song.websiteUrl)),
                     );
                   },
                   icon: Icon(Icons.share),

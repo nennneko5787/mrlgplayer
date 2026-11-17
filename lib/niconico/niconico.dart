@@ -1,3 +1,4 @@
+import 'package:mrlgplayer/niconico/models/lyrics.dart';
 import 'package:unixtime/unixtime.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' as parser;
@@ -66,6 +67,29 @@ class NiconicoServerException implements Exception {
 
 class Niconico {
   final http = NicoNicoHTTPClient();
+
+  Future<VideoLyricsResponse?> getVideoLyrics(String videoId) async {
+    var response = await http.get(
+      Uri.parse('https://nvapi.nicovideo.jp/v1/videos/$videoId/lyrics'),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Frontend-Version': '8.39.1',
+        'X-Frontend-Id': '76',
+      },
+    );
+
+    if (response.statusCode == 404) {
+      return null;
+    }
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw NiconicoServerException(
+        'Server returned ${response.statusCode} ${response.body}',
+      );
+    }
+
+    return VideoLyricsResponse.fromJson(jsonDecode(response.body)["data"]);
+  }
 
   Future<String> getActionTrackId(String videoId) async {
     var response = await http.get(

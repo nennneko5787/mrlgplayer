@@ -16,6 +16,10 @@ add_compile_options(
     "$<$<CXX_COMPILER_ID:MSVC>:/utf-8>"
 )
 
+add_compile_definitions(
+    _SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS
+)
+
 # Define build configuration option.
 get_property(IS_MULTICONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if(IS_MULTICONFIG)

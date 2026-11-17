@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:mrlgplayer/pages/history.dart';
+import 'package:mrlgplayer/pages/settings.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -33,8 +34,11 @@ class AppDrawer extends StatelessWidget {
           ListTile(
             title: const Text('設定'),
             onTap: () {
-              // Update the state of the app.
-              // ...
+              Navigator.of(context).pop();
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsPage()),
+              );
             },
           ),
         ],
