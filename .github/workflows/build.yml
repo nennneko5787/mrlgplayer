@@ -200,6 +200,12 @@ jobs:
       - name: Lint check
         run: flutter analyze --no-fatal-warnings --no-fatal-infos
 
+      - name: Patch flutter_inappwebview_linux
+        run: |
+          find "$HOME/.pub-cache/hosted/pub.dev" \
+            -path '*/flutter_inappwebview_linux-*/linux/CMakeLists.txt' \
+            -exec sed -i '/Wno-deprecated-literal-operator/d' {} +
+
       - name: Build Linux
         run: flutter build linux --release
 
