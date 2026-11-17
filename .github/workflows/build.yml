@@ -184,8 +184,11 @@ jobs:
           sudo apt-get install -y \
             libwpewebkit-1.0-dev \
             libwpe-1.0-dev \
+            libwpebackend-fdo-1.0-dev \
             libgtk-3-dev \
-            libwebkit2gtk-4.1-dev \
+            libsecret-1-dev \
+            libepoxy-dev \
+            libwayland-dev \
             build-essential \
             cmake \
             ninja-build \
