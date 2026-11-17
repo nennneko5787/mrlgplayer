@@ -26,12 +26,16 @@ class SettingsManager {
     final userSession = await storage.read(key: 'nicovideo_userSession');
 
     settings = Settings(
-      theme: ThemeType.values.byName(
-        prefs!.getString("theme") ?? ThemeType.initial.name,
-      ),
+      theme: (prefs!.getString("theme") == null)
+          ? ThemeType.initial
+          : ThemeType.values.byName(prefs!.getString("theme")!),
       nicosid: nicosid,
       userSession: userSession,
-      lyricsProvider: LyricsProviderType.nicovideo,
+      lyricsProvider: (prefs!.getString("lyricsProvider") == null)
+          ? LyricsProviderType.nicovideo
+          : LyricsProviderType.values.byName(
+              prefs!.getString("lyricsProvider")!,
+            ),
     );
 
     if (nicosid != null && userSession != null) {
