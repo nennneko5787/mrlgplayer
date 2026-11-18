@@ -1,4 +1,4 @@
-name: アプリを自動で作成
+name: Build app
 
 on:
   push:
