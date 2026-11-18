@@ -205,9 +205,57 @@ jobs:
 
       - name: Patch flutter_inappwebview_linux
         run: |
-          find "$HOME/.pub-cache/hosted/pub.dev" \
-            -path '*/flutter_inappwebview_linux-*/linux/CMakeLists.txt' \
-            -exec sed -i '/Wno-deprecated-literal-operator/d' {} +
+          python3 - <<'PY'
+          from pathlib import Path
+
+          for path in Path.home().glob(
+              ".pub-cache/hosted/pub.dev/flutter_inappwebview_linux-*/linux/in_app_webview/in_app_webview.cc"
+          ):
+              source = path.read_text()
+              start = source.index(
+                  "std::optional<std::string> InAppWebView::getMetaThemeColor() const {"
+              )
+              end = source.index(
+                  "\n// === Audio State",
+                  start
+              )
+
+              replacement = """std::optional<std::string> InAppWebView::getMetaThemeColor() const {
+            if (webview_ == nullptr) return std::nullopt;
+
+          #if WEBKIT_CHECK_VERSION(2, 50, 0)
+            WebKitColor color;
+            gboolean hasColor = webkit_web_view_get_theme_color(webview_, &color);
+
+            if (!hasColor) return std::nullopt;
+
+            int r = static_cast<int>(color.red * 255.0 + 0.5);
+            int g = static_cast<int>(color.green * 255.0 + 0.5);
+            int b = static_cast<int>(color.blue * 255.0 + 0.5);
+            int a = static_cast<int>(color.alpha * 255.0 + 0.5);
+
+            r = std::clamp(r, 0, 255);
+            g = std::clamp(g, 0, 255);
+            b = std::clamp(b, 0, 255);
+            a = std::clamp(a, 0, 255);
+
+            char hexColor[10];
+            if (a == 255) {
+              snprintf(hexColor, sizeof(hexColor), "#%02X%02X%02X", r, g, b);
+            } else {
+              snprintf(hexColor, sizeof(hexColor), "#%02X%02X%02X%02X", r, g, b, a);
+            }
+
+            return std::string(hexColor);
+          #else
+            return std::nullopt;
+          #endif
+          }
+          """
+
+              path.write_text(source[:start] + replacement + source[end:])
+              print(f"Patched: {path}")
+          PY
 
       - name: Build Linux
         run: flutter build linux --release
