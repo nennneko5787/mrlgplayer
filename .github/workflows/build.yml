@@ -168,7 +168,7 @@ jobs:
         run: |
           apt-get update
           apt-get install -y \
-            curl git unzip xz-utils zip ca-certificates \
+            curl git unzip xz-utils zip ca-certificates jq \
             clang \
             cmake \
             ninja-build \
@@ -182,7 +182,6 @@ jobs:
             libwpe-1.0-dev \
             libwpebackend-fdo-1.0-dev \
             libwpewebkit-2.0-dev=2.48.3-1 \
-            jq
 
       - uses: subosito/flutter-action@v2
         with:
@@ -194,6 +193,9 @@ jobs:
           pkg-config --modversion wpe-webkit-2.0
           pkg-config --modversion wpebackend-fdo-1.0
           pkg-config --modversion wpe-1.0
+
+      - name: Trust Flutter SDK directory
+        run: git config --global --add safe.directory "$FLUTTER_ROOT"
 
       - name: Flutter pub get
         run: flutter pub get
