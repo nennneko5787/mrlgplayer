@@ -157,7 +157,7 @@ jobs:
   # Linux
   build-linux:
     name: Build Linux
-    runs-on: ubuntu-latest
+    runs-on: debian-13
 
     steps:
       - uses: actions/checkout@v4
@@ -178,11 +178,33 @@ jobs:
           flutter-version: "3.50.0"
           channel: "stable"
 
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwpewebkit-2.0-dev=2.48.3-1 \
+            libwpe-1.0-dev \
+            libsecret-1-dev \
+            libepoxy-dev \
+            libwayland-dev
+
+      - name: Check WPE
+        run: |
+          pkg-config --modversion wpe-webkit-2.0
+          pkg-config --modversion wpe-platform-2.0
+          pkg-config --modversion wpe-platform-headless-2.0
+
       - name: Flutter pub get
         run: flutter pub get
 
       - name: Lint check
         run: flutter analyze --no-fatal-warnings --no-fatal-infos
+
+      - name: Patch flutter_inappwebview_linux
+        run: |
+          find "$HOME/.pub-cache/hosted/pub.dev" \
+            -path '*/flutter_inappwebview_linux-*/linux/CMakeLists.txt' \
+            -exec sed -i '/Wno-deprecated-literal-operator/d' {} +
 
       - name: Build Linux
         run: flutter build linux --release
