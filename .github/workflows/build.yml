@@ -190,7 +190,9 @@ jobs:
             build-essential \
             cmake \
             ninja-build \
-            pkg-config
+            pkg-config \
+            libwpewebkit \
+            libwpewebkit-dev
 
       - name: Check WPE
         run: |
