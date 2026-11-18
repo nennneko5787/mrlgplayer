@@ -2,11 +2,13 @@ import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:mrlgplayer/genius/genius.dart';
 import 'package:mrlgplayer/model/lyrics.dart';
 import 'package:mrlgplayer/model/position.dart';
 import 'package:mrlgplayer/model/song.dart';
 import 'package:mrlgplayer/niconico/niconico.dart';
 import 'package:mrlgplayer/petitlyrics/petitlyrics.dart';
+import 'package:mrlgplayer/petitlyrics/query.dart';
 import 'package:mrlgplayer/settings.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -22,6 +24,17 @@ class UnsupportedServiceException implements Exception {
   }
 }
 
+/// Extracts the niconico video ID from a niconico video URL.
+///
+/// Returns `null` when [url] does not point to a niconico video.
+String? extractNiconicoVideoId(String url) {
+  final match = RegExp(
+    r'^https?://(?:nico\.ms/|(?:www\.)?nicovideo\.jp/watch/)([^/?#]+)',
+  ).firstMatch(url);
+
+  return match?.group(1);
+}
+
 class AudioManager {
   static final AudioManager _instance = AudioManager._internal();
   AudioManager._internal();
@@ -31,6 +44,7 @@ class AudioManager {
 
   final niconico = Niconico();
   final petitLyrics = PetitLyrics();
+  final genius = Genius();
   final player = AudioPlayer(useProxyForRequestHeaders: true);
 
   Song? song;
@@ -61,12 +75,9 @@ class AudioManager {
   }
 
   Future<Song> loadAudioFromUrl(String url) async {
-    final match = RegExp(
-      r'^https?://(?:nico\.ms/|(?:www\.)?nicovideo\.jp/watch/)([^/?#]+)',
-    ).firstMatch(url);
+    final videoId = extractNiconicoVideoId(url);
 
-    if (match != null) {
-      final videoId = match.group(1)!;
+    if (videoId != null) {
       return await loadAudioFromNiconico(videoId);
     }
 
@@ -168,17 +179,66 @@ class AudioManager {
     throw UnsupportedServiceException();
   }
 
-  Future<Lyrics?> searchLyricsFromPetitLyrics({required String title}) async {
-    final lines = await petitLyrics.getLyrics(
-      title: title.replaceAll(RegExp(r"【(.*)】"), "").split(" ")[0],
-    );
-    if (lines == null) return null;
+  Future<Lyrics?> searchLyricsFromPetitLyrics({
+    required String title,
+    String artist = '',
+  }) async {
+    final queries = inferPetitLyricsQueries(title: title, uploader: artist);
 
-    final List<TextLine> textLines = List.empty(growable: true);
-    for (var line in lines) {
-      textLines.add(TextLine(characterId: 0, text: line));
+    for (final query in queries) {
+      debugPrint('[PetitLyrics] Searching with $query');
+
+      final lines = await petitLyrics.getLyrics(
+        title: query.title,
+        artist: query.artist,
+      );
+      if (lines == null) continue;
+
+      final List<TextLine> textLines = List.empty(growable: true);
+      for (var line in lines) {
+        textLines.add(TextLine(characterId: 0, text: line));
+      }
+
+      return Lyrics(characters: [Character(id: 0)], textLines: textLines);
     }
 
-    return Lyrics(characters: [Character(id: 0)], textLines: textLines);
+    return null;
+  }
+
+  Future<Lyrics?> searchLyricsFromGenius({
+    required String title,
+    String artist = '',
+  }) async {
+    final queries = inferPetitLyricsQueries(title: title, uploader: artist);
+
+    for (final query in queries) {
+      // `inferPetitLyricsQueries` already returns the title-only candidate
+      // first, followed by the title + artist variants.
+      final searchQuery = [
+        query.title,
+        query.artist,
+      ].where((part) => part.isNotEmpty).join(' ');
+
+      debugPrint('[Genius] Searching with "$searchQuery"');
+
+      final song = await genius.searchSong(
+        query: searchQuery,
+        expectedTitles: [query.title],
+        artist: query.artist.isNotEmpty ? query.artist : artist,
+      );
+      if (song == null) continue;
+
+      final lines = await genius.getLyricBySongId(song.id);
+      if (lines.isEmpty) continue;
+
+      final List<TextLine> textLines = List.empty(growable: true);
+      for (var line in lines) {
+        textLines.add(TextLine(characterId: 0, text: line));
+      }
+
+      return Lyrics(characters: [Character(id: 0)], textLines: textLines);
+    }
+
+    return null;
   }
 }

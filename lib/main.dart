@@ -52,7 +52,7 @@ class _MRLGPlayerState extends ConsumerState<MRLGPlayer> {
     _listener = AppLifecycleListener(
       onDetach: () {
         PlayHistory().dispose();
-        WebView().dispose;
+        WebView().dispose();
         AudioManager().dispose();
       },
     );
@@ -72,6 +72,7 @@ class _MRLGPlayerState extends ConsumerState<MRLGPlayer> {
       title: 'MRLGPlayer',
       theme: themes[settings.theme]!.theme,
       darkTheme: themes[settings.theme]!.darkTheme,
+      themeMode: settings.themeMode,
       home: const HomePage(),
     );
   }

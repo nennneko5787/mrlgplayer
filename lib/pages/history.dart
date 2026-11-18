@@ -168,7 +168,7 @@ class HistoryPageState extends ConsumerState<HistoryPage> {
                                     child: Wrap(
                                       children: <Widget>[
                                         ListTile(
-                                          leading: Icon(Icons.share),
+                                          leading: const Icon(Icons.share),
                                           title: Text('シェアする'),
                                           onTap: () {
                                             Navigator.pop(context);
@@ -180,7 +180,7 @@ class HistoryPageState extends ConsumerState<HistoryPage> {
                                           },
                                         ),
                                         ListTile(
-                                          leading: Icon(Symbols.delete),
+                                          leading: const Icon(Symbols.delete),
                                           title: Text(
                                             '削除',
                                             style: TextStyle(color: Colors.red),

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:material_ui/material_ui.dart';
 import 'package:mrlgplayer/audio.dart';
 import 'package:mrlgplayer/model/lyrics.dart';
 import 'package:mrlgplayer/model/settings.dart';
@@ -19,6 +20,11 @@ class SettingsNotifier extends _$SettingsNotifier {
   Future<void> changeTheme(ThemeType theme) async {
     await SettingsManager().saveTheme(theme);
     state = state.copyWith(theme: theme);
+  }
+
+  Future<void> changeThemeMode(ThemeMode themeMode) async {
+    await SettingsManager().saveThemeMode(themeMode);
+    state = state.copyWith(themeMode: themeMode);
   }
 
   Future<void> changeLyricsProvider(LyricsProviderType lyricsProvider) async {
@@ -44,7 +50,7 @@ class SettingsNotifier extends _$SettingsNotifier {
       ..domain = '.nicovideo.jp'
       ..path = '/';
 
-    await AudioManager().niconico.http.cookieJar.saveFromResponse(
+    await AudioManager().niconico.cookieJar.saveFromResponse(
       Uri.parse('https://nicovideo.jp/'),
       [nicosidCookie, userSessionCookie],
     );
@@ -52,7 +58,7 @@ class SettingsNotifier extends _$SettingsNotifier {
 
   Future<void> _deleteNicoCookie(String name) async {
     final uri = Uri.parse('https://nicovideo.jp/');
-    final cookieJar = AudioManager().niconico.http.cookieJar;
+    final cookieJar = AudioManager().niconico.cookieJar;
 
     final cookie = Cookie(name, '')
       ..expires = DateTime.utc(1970, 1, 1)

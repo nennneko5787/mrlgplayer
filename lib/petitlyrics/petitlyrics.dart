@@ -1,8 +1,24 @@
+import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
+import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:html/parser.dart' as parser;
+import 'package:mrlgplayer/petitlyrics/query.dart';
 
 import 'dart:convert';
 
 import 'package:material_ui/material_ui.dart';
+
+class _LyricsSearchResult {
+  final String lyricId;
+  final String title;
+  final String artist;
+
+  const _LyricsSearchResult({
+    required this.lyricId,
+    required this.title,
+    required this.artist,
+  });
+}
 
 class PetitLyricsServerException implements Exception {
   final String message;
@@ -23,8 +39,14 @@ class PetitLyrics {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
       },
       preserveHeaderCase: true,
+      validateStatus: (int? statusCode) => (statusCode != null),
     ),
   );
+  final cookieJar = CookieJar();
+
+  PetitLyrics() {
+    http.interceptors.add(CookieManager(cookieJar));
+  }
 
   Future<List<String>?> getLyrics({
     String title = "",
@@ -45,29 +67,22 @@ class PetitLyrics {
       );
     }
 
-    var html = response.data as String;
-    final startIndex = html.indexOf('id="lyrics_list"');
-    if (startIndex == -1) {
-      debugPrint("startIndex");
+    final html = response.data as String;
+    final results = _parseSearchResults(html);
+    if (results.isEmpty) {
+      debugPrint(
+        'No lyrics found for title="$title" artist="$artist" album="$album"',
+      );
       return null;
     }
 
-    final endIndex = html.indexOf('id="lyrics_list_pager"', startIndex);
-    if (endIndex == -1) {
-      debugPrint("endIndex");
-      return null;
-    }
+    final result = _pickBestResult(results, title: title, artist: artist);
+    final lyricId = result.lyricId;
 
-    final lyricsHtml = html.substring(startIndex, endIndex);
-    final lyricsMatch = RegExp(r'href="/lyrics/(?<lyricId>\d+)')
-        .firstMatch(lyricsHtml);
-
-    if (lyricsMatch == null) {
-      debugPrint("lyricsMatch not found");
-      return null;
-    }
-
-    final lyricId = lyricsMatch.namedGroup("lyricId")!;
+    debugPrint(
+      'PetitLyrics: picked "${result.title}" by "${result.artist}" '
+      '(id: $lyricId)',
+    );
 
     // fake req
     final lyricPage = 'https://petitlyrics.com/lyrics/$lyricId';
@@ -104,6 +119,7 @@ class PetitLyrics {
           "X-Requested-With": "XMLHttpRequest",
           "Referer": "https://petitlyrics.com/lyrics/$lyricId",
         },
+        preserveHeaderCase: true,
       ),
     );
 
@@ -119,19 +135,77 @@ class PetitLyrics {
       );
     }
 
-    List<String> lines = RegExp(r'{"lyrics":"(?<base64>[^"]*)"}')
-        .allMatches(response3.data as String)
-        .map((match) {
+    return (response3.data as List<dynamic>)
+        .map((item) {
+          final map = item as Map<String, dynamic>;
+
           return utf8
-              .decode(
-                base64Decode(
-                  match.namedGroup("base64")!.replaceAll(r'\/', '/'),
-                ),
-              )
+              .decode(base64Decode(map["lyrics"] as String))
               .replaceFirst(RegExp(r'[\r\n]+$'), '');
         })
         .toList(growable: false);
-
-    return lines;
   }
+}
+
+List<_LyricsSearchResult> _parseSearchResults(String html) {
+  final document = parser.parse(html);
+  final list = document.querySelector('#lyrics_list');
+  if (list == null) return const [];
+
+  final results = <_LyricsSearchResult>[];
+
+  for (final row in list.querySelectorAll('tr')) {
+    String? lyricId;
+    var resultTitle = '';
+
+    for (final link in row.querySelectorAll('a[href*="/lyrics/"]')) {
+      final match = RegExp(r'/lyrics/(\d+)')
+          .firstMatch(link.attributes['href'] ?? '');
+      if (match == null) continue;
+
+      lyricId = match.group(1);
+      resultTitle = link.text.trim();
+      break;
+    }
+
+    if (lyricId == null) continue;
+
+    results.add(
+      _LyricsSearchResult(
+        lyricId: lyricId,
+        title: resultTitle,
+        artist: row.querySelector('.lyrics-list-artist')?.text.trim() ?? '',
+      ),
+    );
+  }
+
+  return results;
+}
+
+/// Picks the result that is the closest match to the searched title, so a
+/// partial match such as "Hibana" does not win over "Hibana -Reloaded-".
+_LyricsSearchResult _pickBestResult(
+  List<_LyricsSearchResult> results, {
+  required String title,
+  required String artist,
+}) {
+  var best = results.first;
+  var bestScore = double.negativeInfinity;
+
+  for (final result in results) {
+    var score = lyricsSimilarity(title, result.title);
+
+    // The artist is only a tie breaker, because the artist registered on
+    // PetitLyrics often differs from the uploader name.
+    if (artist.isNotEmpty) {
+      score += lyricsSimilarity(artist, result.artist) * 0.1;
+    }
+
+    if (score > bestScore) {
+      bestScore = score;
+      best = result;
+    }
+  }
+
+  return best;
 }

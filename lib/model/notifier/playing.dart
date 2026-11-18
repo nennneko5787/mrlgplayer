@@ -1,6 +1,7 @@
 import 'package:mrlgplayer/audio.dart';
 import 'package:mrlgplayer/history.dart';
 import 'package:mrlgplayer/model/history.dart';
+import 'package:mrlgplayer/model/notifier/lyrics.dart';
 import 'package:mrlgplayer/model/song.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -20,6 +21,7 @@ class PlayingNotifier extends _$PlayingNotifier {
     required String id,
   }) async {
     stop();
+    ref.read(lyricsProvider.notifier).reset();
 
     final song = await AudioManager().loadAudioFromServiceAndId(
       service: service,
@@ -34,6 +36,7 @@ class PlayingNotifier extends _$PlayingNotifier {
 
   Future<void> loadAudioFromUrl(String url) async {
     stop();
+    ref.read(lyricsProvider.notifier).reset();
 
     final song = await AudioManager().loadAudioFromUrl(url);
     state = song;

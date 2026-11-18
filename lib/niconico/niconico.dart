@@ -1,47 +1,12 @@
+import 'package:dio/dio.dart';
+import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:mrlgplayer/niconico/models/lyrics.dart';
 import 'package:unixtime/unixtime.dart';
-import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' as parser;
 import 'package:html/dom.dart';
 import 'package:mrlgplayer/niconico/models/watchdatav3.dart';
 import 'package:mrlgplayer/niconico/models/domand.dart';
 import 'package:cookie_jar/cookie_jar.dart';
-
-import 'dart:convert';
-
-class NicoNicoHTTPClient extends http.BaseClient {
-  final String userAgent =
-      "MRLGPlayer/1.00 (repository is https://github.com/nennneko5787/MRLGPlayer)";
-  final http.Client _inner = http.Client();
-  final CookieJar cookieJar = CookieJar();
-
-  NicoNicoHTTPClient();
-
-  @override
-  Future<http.StreamedResponse> send(http.BaseRequest request) async {
-    final cookies = await cookieJar.loadForRequest(request.url);
-
-    if (cookies.isNotEmpty) {
-      request.headers["cookie"] = cookies
-          .map((cookie) => '${cookie.name}=${cookie.value}')
-          .join('; ');
-    }
-
-    request.headers.putIfAbsent('User-Agent', () => userAgent);
-
-    final response = await _inner.send(request);
-
-    final setCookie = response.headers["set-cookie"];
-
-    if (setCookie != null) {
-      await cookieJar.saveFromResponse(request.url, [
-        Cookie.fromSetCookieValue(setCookie),
-      ]);
-    }
-
-    return response;
-  }
-}
 
 class DomandHlsAccessRightResponseAndCookie {
   final DomandHlsAccessRightResponse response;
@@ -66,41 +31,61 @@ class NiconicoServerException implements Exception {
 }
 
 class Niconico {
-  final http = NicoNicoHTTPClient();
+  final http = Dio(
+    BaseOptions(
+      headers: {
+        "User-Agent": "MRLGPlayer/1.00 (repository is https://github.com/nennneko5787/MRLGPlayer)",
+      },
+      preserveHeaderCase: true,
+      validateStatus: (int? statusCode) => (statusCode != null),
+    ),
+  );
+
+  final cookieJar = CookieJar();
+
+  Niconico() {
+    http.interceptors.add(CookieManager(cookieJar));
+  }
 
   Future<VideoLyricsResponse?> getVideoLyrics(String videoId) async {
     var response = await http.get(
-      Uri.parse('https://nvapi.nicovideo.jp/v1/videos/$videoId/lyrics'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Frontend-Version': '8.39.1',
-        'X-Frontend-Id': '76',
-      },
+      'https://nvapi.nicovideo.jp/v1/videos/$videoId/lyrics',
+      options: Options(
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Frontend-Version': '8.39.1',
+          'X-Frontend-Id': '76',
+        },
+      ),
     );
 
     if (response.statusCode == 404) {
       return null;
     }
 
-    if (response.statusCode < 200 || response.statusCode >= 300) {
+    if (response.statusCode == null ||
+        response.statusCode! < 200 ||
+        response.statusCode! >= 300) {
       throw NiconicoServerException(
-        'Server returned ${response.statusCode} ${response.body}',
+        'Server returned ${response.statusCode} ${response.data}',
       );
     }
 
-    return VideoLyricsResponse.fromJson(jsonDecode(response.body)["data"]);
+    return VideoLyricsResponse.fromJson(response.data["data"]);
   }
 
   Future<String> getActionTrackId(String videoId) async {
     var response = await http.get(
-      Uri.parse('https://sp.nicovideo.jp/watch/$videoId?redirected=1'),
+      'https://sp.nicovideo.jp/watch/$videoId?redirected=1',
     );
 
-    if (response.statusCode < 200 || response.statusCode >= 300) {
+    if (response.statusCode == null ||
+        response.statusCode! < 200 ||
+        response.statusCode! >= 300) {
       throw NiconicoServerException('Server returned ${response.statusCode}');
     }
 
-    Document document = parser.parse(response.body);
+    Document document = parser.parse(response.data);
 
     String? scriptText;
     document.querySelectorAll("script").forEach((content) {
@@ -140,20 +125,24 @@ class Niconico {
     );
 
     var response = await http.get(
-      url,
-      headers: {
-        "Origin": "https://sp.nicovideo.jp",
-        "Referer": "https://sp.nicovideo.jp/",
-      },
+      url.toString(),
+      options: Options(
+        headers: {
+          "Origin": "https://sp.nicovideo.jp",
+          "Referer": "https://sp.nicovideo.jp/",
+        },
+      ),
     );
 
-    if (response.statusCode < 200 || response.statusCode >= 300) {
+    if (response.statusCode == null ||
+        response.statusCode! < 200 ||
+        response.statusCode! >= 300) {
       throw NiconicoServerException(
-        'Server returned ${response.statusCode} ${response.body}',
+        'Server returned ${response.statusCode} ${response.data}',
       );
     }
 
-    return WatchDataV3Response.fromJson(jsonDecode(response.body)["data"]);
+    return WatchDataV3Response.fromJson(response.data["data"]);
   }
 
   Future<DomandHlsAccessRightResponseAndCookie> getVariantsDomandHlsAccessRight(
@@ -179,36 +168,36 @@ class Niconico {
     }
 
     var response = await http.post(
-      Uri.parse(
-        'https://nvapi.nicovideo.jp/v1/watch/$videoId/access-rights/hls${(watchTrackId != null ? '?actionTrackId=$watchTrackId' : "")}',
+      'https://nvapi.nicovideo.jp/v1/watch/$videoId/access-rights/hls${(watchTrackId != null ? '?actionTrackId=$watchTrackId' : "")}',
+      options: Options(
+        headers: {
+          'Content-Type': 'application/json',
+          'Referer': 'https://www.nicovideo.jp/',
+          'Origin': 'https://www.nicovideo.jp',
+          'X-Access-Right-Key': media.domand.accessRightKey,
+          'X-Frontend-Version': '0',
+          'X-Frontend-Id': '6',
+          'X-Niconico-Language': 'ja-jp',
+          'X-Request-With': 'https://www.nicovideo.jp',
+          'Sec-Fetch-Dest': 'empty',
+          'Sec-Fetch-Mode': 'cors',
+          'Sec-Fetch-Site': 'same-site',
+        },
       ),
-      headers: {
-        'Content-Type': 'application/json',
-        'Referer': 'https://www.nicovideo.jp/',
-        'Origin': 'https://www.nicovideo.jp',
-        'X-Access-Right-Key': media.domand.accessRightKey,
-        'X-Frontend-Version': '0',
-        'X-Frontend-Id': '6',
-        'X-Niconico-Language': 'ja-jp',
-        'X-Request-With': 'https://www.nicovideo.jp',
-        'Sec-Fetch-Dest': 'empty',
-        'Sec-Fetch-Mode': 'cors',
-        'Sec-Fetch-Site': 'same-site',
-      },
-      body: '{"outputs":[${qualities.join(",")}]}',
+      data: '{"outputs":[${qualities.join(",")}]}',
     );
 
-    if (response.statusCode < 200 || response.statusCode >= 300) {
+    if (response.statusCode == null ||
+        response.statusCode! < 200 ||
+        response.statusCode! >= 300) {
       throw NiconicoServerException(
-        'Server returned ${response.statusCode} ${response.body}',
+        'Server returned ${response.statusCode} ${response.data}',
       );
     }
 
     return DomandHlsAccessRightResponseAndCookie(
-      response: DomandHlsAccessRightResponse.fromJson(
-        jsonDecode(response.body)["data"],
-      ),
-      domandBid: response.headers["set-cookie"]!.split(";")[0].split("=")[1],
+      response: DomandHlsAccessRightResponse.fromJson(response.data["data"]),
+      domandBid: response.headers["set-cookie"]![0].split(";")[0].split("=")[1],
     );
   }
 
@@ -236,33 +225,33 @@ class Niconico {
     }
 
     var response = await http.post(
-      Uri.parse(
-        'https://nvapi.nicovideo.jp/v1/watch/$videoId/access-rights/hls${(watchTrackId != null ? '?actionTrackId=$watchTrackId' : "")}',
+      'https://nvapi.nicovideo.jp/v1/watch/$videoId/access-rights/hls${(watchTrackId != null ? '?actionTrackId=$watchTrackId' : "")}',
+      options: Options(
+        headers: {
+          'Content-Type': 'application/json',
+          'Referer': 'https://sp.nicovideo.jp/',
+          'Origin': 'https://sp.nicovideo.jp',
+          'X-Access-Right-Key': media.domand.accessRightKey,
+          'X-Frontend-Version': '0.1.0',
+          'X-Frontend-Id': '3',
+          'X-Niconico-Language': 'ja-jp',
+          'X-Request-With': 'nicovideo',
+        },
       ),
-      headers: {
-        'Content-Type': 'application/json',
-        'Referer': 'https://sp.nicovideo.jp/',
-        'Origin': 'https://sp.nicovideo.jp',
-        'X-Access-Right-Key': media.domand.accessRightKey,
-        'X-Frontend-Version': '0.1.0',
-        'X-Frontend-Id': '3',
-        'X-Niconico-Language': 'ja-jp',
-        'X-Request-With': 'nicovideo',
-      },
-      body: '{"outputs":[${qualities.join(',')}]}',
+      data: '{"outputs":[${qualities.join(',')}]}',
     );
 
-    if (response.statusCode < 200 || response.statusCode >= 300) {
+    if (response.statusCode == null ||
+        response.statusCode! < 200 ||
+        response.statusCode! >= 300) {
       throw NiconicoServerException(
-        'Server returned ${response.statusCode} ${response.body}',
+        'Server returned ${response.statusCode} ${response.data}',
       );
     }
 
     return DomandHlsAccessRightResponseAndCookie(
-      response: DomandHlsAccessRightResponse.fromJson(
-        jsonDecode(response.body)["data"],
-      ),
-      domandBid: response.headers["set-cookie"]!.split(";")[0].split("=")[1],
+      response: DomandHlsAccessRightResponse.fromJson(response.data["data"]),
+      domandBid: response.headers["set-cookie"]![0].split(";")[0].split("=")[1],
     );
   }
 }

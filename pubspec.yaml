@@ -36,7 +36,6 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   just_audio: ^0.10.6
-  http: ^1.6.0
   html: ^0.15.7
   unixtime: ^1.0.0
   json_annotation: ^4.12.0

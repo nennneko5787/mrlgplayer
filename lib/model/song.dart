@@ -1,5 +1,3 @@
-import 'package:mrlgplayer/model/lyrics.dart';
-
 class Song {
   final String id;
   final String service;
@@ -7,8 +5,6 @@ class Song {
   final String artist;
   final String? artworkUrl;
   final String websiteUrl;
-  Lyrics? lyrics;
-  bool lyricsError = false;
 
   Song({
     required this.id,
@@ -17,6 +13,5 @@ class Song {
     required this.artist,
     this.artworkUrl,
     required this.websiteUrl,
-    this.lyrics,
   });
 }

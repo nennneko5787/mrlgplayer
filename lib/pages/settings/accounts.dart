@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mrlgplayer/model/notifier/settings.dart';
 import 'package:mrlgplayer/pages/settings/login/nicovideo.dart';
+import 'package:mrlgplayer/widgets/label.dart';
 
 class AccountsSettingsPage extends ConsumerStatefulWidget {
   const AccountsSettingsPage({super.key});
@@ -52,14 +53,16 @@ class AccountsSettingsPageState extends ConsumerState<AccountsSettingsPage> {
     final settings = ref.watch(settingsProvider);
 
     return Scaffold(
-      appBar: AppBar(centerTitle: true, title: const Text("設定")),
+      appBar: AppBar(centerTitle: true, title: const Text("アカウント")),
       body: SingleChildScrollView(
         child: Column(
+          crossAxisAlignment: .start,
           children: [
+            const Label("非公式プロバイダー"),
             ListTile(
               leading: const Icon(Icons.tv),
               title: Text("ニコニコ動画"),
-              subtitle: Text("ニコニコ動画のアカウントでログインします。"),
+              subtitle: Text("歌詞取得及びデバイス規制のかかった動画の取得に使用します。"),
               trailing: (settings.userSession != null)
                   ? const Icon(Icons.check)
                   : null,

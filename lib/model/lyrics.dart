@@ -1,6 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
-enum LyricsProviderType { nicovideo, petitLyrics }
+enum LyricsProviderType { nicovideo, petitLyrics, genius }
 
 class Character {
   final int id;
@@ -30,4 +30,32 @@ class Lyrics {
   final List<TextLine> textLines;
 
   Lyrics({required this.characters, required this.textLines});
+}
+
+class LyricsState {
+  final Lyrics? lyrics;
+  bool hasError = false;
+  bool isLyricsViewOpened = false;
+
+  LyricsState({
+    required this.lyrics,
+    this.hasError = false,
+    this.isLyricsViewOpened = false,
+  });
+
+  static const _unset = Object();
+
+  LyricsState copyWith({
+    Object? lyrics = _unset,
+    bool? hasError,
+    bool? isLyricsViewOpened,
+  }) {
+    return LyricsState(
+      lyrics: identical(lyrics, _unset) ? this.lyrics : lyrics as Lyrics?,
+      hasError: (hasError == null) ? this.hasError : hasError,
+      isLyricsViewOpened: (isLyricsViewOpened == null)
+          ? this.isLyricsViewOpened
+          : isLyricsViewOpened,
+    );
+  }
 }

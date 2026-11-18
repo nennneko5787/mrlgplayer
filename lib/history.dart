@@ -15,7 +15,22 @@ class PlayHistory {
 
   Database? db;
 
-  Future<void> init() async {
+  /// Opens the play history database.
+  ///
+  /// [factory] and [path] can be provided to use a different database
+  /// implementation, which is useful for tests.
+  Future<void> init({DatabaseFactory? factory, String? path}) async {
+    if (factory != null) {
+      db = await factory.openDatabase(
+        path ?? inMemoryDatabasePath,
+        options: OpenDatabaseOptions(
+          version: 1,
+          onCreate: _createHistoryTable,
+        ),
+      );
+      return;
+    }
+
     if (defaultTargetPlatform == TargetPlatform.windows ||
         defaultTargetPlatform == TargetPlatform.linux) {
       sqfliteFfiInit();
@@ -36,15 +51,13 @@ class PlayHistory {
 
   Future<Database> _openAppDatabase() async {
     var path = join(await getDatabasesPath(), 'history.db');
-    return openDatabase(
-      path,
-      version: 1,
-      onCreate: (db, version) async {
-        await db.execute(
-          'CREATE TABLE history (id INTEGER PRIMARY KEY AUTOINCREMENT, viewed_at TEXT NOT NULL, title TEXT NOT NULL, '
-          'artist TEXT NOT NULL, song_id TEXT NOT NULL, service TEXT NOT NULL, artwork_url TEXT, website_url TEXT NOT NULL)',
-        );
-      },
+    return openDatabase(path, version: 1, onCreate: _createHistoryTable);
+  }
+
+  Future<void> _createHistoryTable(Database db, int version) async {
+    await db.execute(
+      'CREATE TABLE history (id INTEGER PRIMARY KEY AUTOINCREMENT, viewed_at TEXT NOT NULL, title TEXT NOT NULL, '
+      'artist TEXT NOT NULL, song_id TEXT NOT NULL, service TEXT NOT NULL, artwork_url TEXT, website_url TEXT NOT NULL)',
     );
   }
 

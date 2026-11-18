@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mrlgplayer/audio.dart';
 import 'package:mrlgplayer/model/lyrics.dart';
 import 'package:mrlgplayer/model/settings.dart';
@@ -29,6 +30,9 @@ class SettingsManager {
       theme: (prefs!.getString("theme") == null)
           ? ThemeType.initial
           : ThemeType.values.byName(prefs!.getString("theme")!),
+      themeMode: (prefs!.getString("themeMode") == null)
+          ? ThemeMode.system
+          : ThemeMode.values.byName(prefs!.getString("themeMode")!),
       nicosid: nicosid,
       userSession: userSession,
       lyricsProvider: (prefs!.getString("lyricsProvider") == null)
@@ -47,7 +51,7 @@ class SettingsManager {
         ..domain = '.nicovideo.jp'
         ..path = '/';
 
-      await AudioManager().niconico.http.cookieJar.saveFromResponse(
+      await AudioManager().niconico.cookieJar.saveFromResponse(
         Uri.parse('https://nicovideo.jp/'),
         [nicosidCookie, userSessionCookie],
       );
@@ -57,6 +61,11 @@ class SettingsManager {
   Future<void> saveTheme(ThemeType theme) async {
     if (SettingsManager().prefs == null) return;
     await SettingsManager().prefs!.setString("theme", theme.name);
+  }
+
+  Future<void> saveThemeMode(ThemeMode themeMode) async {
+    if (SettingsManager().prefs == null) return;
+    await SettingsManager().prefs!.setString("themeMode", themeMode.name);
   }
 
   Future<void> saveLyricsProvider(LyricsProviderType lyricsProvider) async {

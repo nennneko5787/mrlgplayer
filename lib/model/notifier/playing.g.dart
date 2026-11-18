@@ -41,7 +41,7 @@ final class PlayingNotifierProvider
   }
 }
 
-String _$playingNotifierHash() => r'116d97206ba0fdd84b03c57c7cebc0fb9fa82e78';
+String _$playingNotifierHash() => r'2848cd175b41ce7086c4466ffc605d973927ea43';
 
 abstract class _$PlayingNotifier extends $Notifier<Song?> {
   Song? build();
