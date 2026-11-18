@@ -181,7 +181,8 @@ jobs:
             libwayland-dev \
             libwpe-1.0-dev \
             libwpebackend-fdo-1.0-dev \
-            libwpewebkit-2.0-dev=2.48.3-1
+            libwpewebkit-2.0-dev=2.48.3-1 \
+            jq
 
       - uses: subosito/flutter-action@v2
         with:
