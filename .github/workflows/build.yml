@@ -157,42 +157,42 @@ jobs:
   # Linux
   build-linux:
     name: Build Linux
-    runs-on: debian-13
+    runs-on: ubuntu-24.04
+    container:
+      image: debian:trixie
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
+          apt-get update
+          apt-get install -y \
+            curl git unzip xz-utils zip ca-certificates \
             clang \
             cmake \
             ninja-build \
             pkg-config \
+            build-essential \
             libgtk-3-dev \
-            libstdc++-12-dev
+            libstdc++-14-dev \
+            libsecret-1-dev \
+            libepoxy-dev \
+            libwayland-dev \
+            libwpe-1.0-dev \
+            libwpebackend-fdo-1.0-dev \
+            libwpewebkit-2.0-dev=2.48.3-1
 
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: "3.50.0"
           channel: "stable"
 
-      - name: Install Linux dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libwpewebkit-2.0-dev=2.48.3-1 \
-            libwpe-1.0-dev \
-            libsecret-1-dev \
-            libepoxy-dev \
-            libwayland-dev
-
       - name: Check WPE
         run: |
           pkg-config --modversion wpe-webkit-2.0
-          pkg-config --modversion wpe-platform-2.0
-          pkg-config --modversion wpe-platform-headless-2.0
+          pkg-config --modversion wpebackend-fdo-1.0
+          pkg-config --modversion wpe-1.0
 
       - name: Flutter pub get
         run: flutter pub get
