@@ -1,3 +1,4 @@
+import 'package:flutter_debug_overlay/flutter_debug_overlay.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:material_ui/material_ui.dart';
@@ -74,6 +75,7 @@ class _MRLGPlayerState extends ConsumerState<MRLGPlayer> {
       darkTheme: themes[settings.theme]!.darkTheme,
       themeMode: settings.themeMode,
       home: const HomePage(),
+      builder: DebugOverlay.builder(),
     );
   }
 }
