@@ -18,8 +18,11 @@ class NicovideoLoginPageState extends ConsumerState<NicovideoLoginPage> {
 
   InAppWebViewController? webViewController;
   InAppWebViewSettings settings = InAppWebViewSettings(
-    mediaPlaybackRequiresUserGesture: false,
-    allowsInlineMediaPlayback: true,
+	  mediaPlaybackRequiresUserGesture: false,
+	  allowsInlineMediaPlayback: true,
+	  javaScriptEnabled: true,
+	  transparentBackground: false,
+	  isInspectable: true,
   );
   double progress = 0.0;
   PullToRefreshController? pullToRefreshController;
@@ -58,7 +61,9 @@ class NicovideoLoginPageState extends ConsumerState<NicovideoLoginPage> {
             children: [
               InAppWebView(
                 key: webViewKey,
-                webViewEnvironment: WebView().webView,
+							  webViewEnvironment: Platform.isWindows
+							      ? WebView().webView
+							      : null,
                 initialUrlRequest: URLRequest(
                   url: WebUri(
                     "https://account.nicovideo.jp/login?site=niconico&next_url=%2F&sec=header_pc&cmnhd_ref=device%3Dpc%26site%3Dniconico%26pos%3Dheader_login%26page%3Dtop",
