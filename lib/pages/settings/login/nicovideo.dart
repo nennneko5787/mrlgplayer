@@ -80,7 +80,7 @@ class NicovideoLoginPageState extends ConsumerState<NicovideoLoginPage> {
                     return;
                   }
 
-                  final cookieManager = WebView().cookieManager;
+                  final cookieManager = WebView().cookieManager!;
 
                   final cookies = await cookieManager.getCookies(
                     url: WebUri("https://www.nicovideo.jp/"),
