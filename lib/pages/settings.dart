@@ -1,3 +1,4 @@
+import 'package:mrlgplayer/model/notifier/debug.dart';
 import 'package:mrlgplayer/pages/settings/accounts.dart';
 import 'package:mrlgplayer/pages/settings/general.dart';
 import 'package:mrlgplayer/pages/settings/theme.dart';
@@ -23,6 +24,8 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final notifier = ref.read(debugProvider.notifier);
+
     return Scaffold(
       appBar: AppBar(centerTitle: true, title: const Text("設定")),
       body: SingleChildScrollView(
@@ -65,6 +68,15 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
                     builder: (context) => const ThemeSettingsPage(),
                   ),
                 );
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Symbols.palette),
+              title: Text("デバッグメニューを開く"),
+              subtitle: Text("開発者向けの機能です"),
+              onTap: () {
+                notifier.state = !notifier.state;
               },
             ),
             const Divider(),

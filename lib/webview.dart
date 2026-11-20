@@ -1,7 +1,7 @@
 import 'dart:ffi';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
+import "package:mrlgplayer/utils.dart";
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:path/path.dart';
@@ -58,48 +58,46 @@ class WebView {
   WebViewEnvironment? webView;
   CookieManager? cookieManager;
 
-	Future<void> init() async {
-	  if (cookieManager != null) return;
-	
-	  if (!Platform.isWindows) {
-	    cookieManager = CookieManager.instance();
-	    return;
-	  }
-	
-	  _ensureComInitialized();
-	
-	  final availableVersion = await WebViewEnvironment.getAvailableVersion();
-	  assert(
-	    availableVersion != null,
-	    'Failed to find an installed WebView2 Runtime or non-stable Microsoft Edge installation.',
-	  );
-	
-	  final dir = await getApplicationSupportDirectory();
-	  final settings = WebViewEnvironmentSettings(
-	    userDataFolder: join(dir.path, 'webview'),
-	  );
-	
-	  try {
-	    webView = await WebViewEnvironment.create(settings: settings);
-	  } on PlatformException catch (error) {
-	    debugPrint('[WebView] Failed to create WebViewEnvironment: $error');
-	
-	    _ensureComInitialized();
-	
-	    try {
-	      webView = await WebViewEnvironment.create(settings: settings);
-	    } on PlatformException catch (retryError) {
-	      debugPrint(
-	        '[WebView] Failed to create WebViewEnvironment again: $retryError',
-	      );
-	      webView = null;
-	    }
-	  }
-	
-	  cookieManager = CookieManager.instance(
-	    webViewEnvironment: webView,
-	  );
-	}
+  Future<void> init() async {
+    if (cookieManager != null) return;
+
+    if (!Platform.isWindows) {
+      cookieManager = CookieManager.instance();
+      return;
+    }
+
+    _ensureComInitialized();
+
+    final availableVersion = await WebViewEnvironment.getAvailableVersion();
+    assert(
+      availableVersion != null,
+      'Failed to find an installed WebView2 Runtime or non-stable Microsoft Edge installation.',
+    );
+
+    final dir = await getApplicationSupportDirectory();
+    final settings = WebViewEnvironmentSettings(
+      userDataFolder: join(dir.path, 'webview'),
+    );
+
+    try {
+      webView = await WebViewEnvironment.create(settings: settings);
+    } on PlatformException catch (error) {
+      debugPrint('[WebView] Failed to create WebViewEnvironment: $error');
+
+      _ensureComInitialized();
+
+      try {
+        webView = await WebViewEnvironment.create(settings: settings);
+      } on PlatformException catch (retryError) {
+        debugPrint(
+          '[WebView] Failed to create WebViewEnvironment again: $retryError',
+        );
+        webView = null;
+      }
+    }
+
+    cookieManager = CookieManager.instance(webViewEnvironment: webView);
+  }
 
   Future<void> dispose() async {
     final environment = webView;

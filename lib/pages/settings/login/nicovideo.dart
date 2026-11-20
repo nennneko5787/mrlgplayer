@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mrlgplayer/model/notifier/settings.dart';
 import 'package:mrlgplayer/webview.dart';
+import "package:mrlgplayer/utils.dart" hide debugPrint;
 
 class NicovideoLoginPage extends ConsumerStatefulWidget {
   const NicovideoLoginPage({super.key});
@@ -18,11 +19,11 @@ class NicovideoLoginPageState extends ConsumerState<NicovideoLoginPage> {
 
   InAppWebViewController? webViewController;
   InAppWebViewSettings settings = InAppWebViewSettings(
-	  mediaPlaybackRequiresUserGesture: false,
-	  allowsInlineMediaPlayback: true,
-	  javaScriptEnabled: true,
-	  transparentBackground: false,
-	  isInspectable: true,
+    mediaPlaybackRequiresUserGesture: false,
+    allowsInlineMediaPlayback: true,
+    javaScriptEnabled: true,
+    transparentBackground: false,
+    isInspectable: true,
   );
   double progress = 0.0;
   PullToRefreshController? pullToRefreshController;

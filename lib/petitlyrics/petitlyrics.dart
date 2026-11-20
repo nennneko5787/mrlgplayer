@@ -6,7 +6,7 @@ import 'package:mrlgplayer/petitlyrics/query.dart';
 
 import 'dart:convert';
 
-import 'package:material_ui/material_ui.dart';
+import "package:mrlgplayer/utils.dart";
 
 class _LyricsSearchResult {
   final String lyricId;
