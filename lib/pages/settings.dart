@@ -76,7 +76,7 @@ class SettingsPageState extends ConsumerState<SettingsPage> {
               title: Text("デバッグメニューを開く"),
               subtitle: Text("開発者向けの機能です"),
               onTap: () {
-                notifier.state = !notifier.state;
+                notifier.toggle();
               },
             ),
             const Divider(),

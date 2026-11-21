@@ -2,10 +2,10 @@ import 'dart:io';
 
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:material_ui/material_ui.dart';
+import 'package:material_ui/material_ui.dart' hide debugPrint;
 import 'package:mrlgplayer/model/notifier/settings.dart';
 import 'package:mrlgplayer/webview.dart';
-import "package:mrlgplayer/utils.dart" hide debugPrint;
+import "package:mrlgplayer/utils.dart";
 
 class NicovideoLoginPage extends ConsumerStatefulWidget {
   const NicovideoLoginPage({super.key});

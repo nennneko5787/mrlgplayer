@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' hide debugPrint;
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:mrlgplayer/genius/genius.dart';
@@ -10,7 +10,7 @@ import 'package:mrlgplayer/petitlyrics/petitlyrics.dart';
 import 'package:mrlgplayer/petitlyrics/query.dart';
 import 'package:mrlgplayer/settings.dart';
 import 'package:rxdart/rxdart.dart';
-import "package:mrlgplayer/utils.dart" hide debugPrint;
+import "package:mrlgplayer/utils.dart";
 
 class UnsupportedServiceException implements Exception {
   final String message;

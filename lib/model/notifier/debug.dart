@@ -6,4 +6,8 @@ part 'debug.g.dart';
 class DebugNotifier extends _$DebugNotifier {
   @override
   bool build() => false;
+
+  void toggle() {
+    state = !state;
+  }
 }
