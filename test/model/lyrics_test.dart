@@ -10,13 +10,17 @@ void main() {
         Character(id: 1, name: 'second', color: Colors.red),
       ],
       textLines: [
+        TextLine(characterId: 0, text: 'line 1'),
         TextLine(
-          characterId: 0,
-          start: const Duration(seconds: 1),
-          end: const Duration(seconds: 2),
-          text: 'line 1',
+          characterId: 1,
+          parts: [
+            TextPart(
+              start: const Duration(seconds: 1),
+              end: const Duration(seconds: 2),
+              text: 'line 2',
+            ),
+          ],
         ),
-        TextLine(characterId: 1, text: 'line 2'),
       ],
     );
   }
@@ -29,10 +33,14 @@ void main() {
       expect(lyrics.characters.first.align, TextAlign.center);
       expect(lyrics.characters.last.color, Colors.red);
       expect(lyrics.textLines, hasLength(2));
-      expect(lyrics.textLines.first.start, const Duration(seconds: 1));
-      expect(lyrics.textLines.first.end, const Duration(seconds: 2));
-      expect(lyrics.textLines.last.end, isNull);
-      expect(lyrics.textLines.last.text, 'line 2');
+      expect(lyrics.textLines.first.parts.length, 0);
+      expect(lyrics.textLines.last.parts.length, 1);
+      expect(
+        lyrics.textLines.last.parts.first.start,
+        const Duration(seconds: 1),
+      );
+      expect(lyrics.textLines.last.parts.first.end, const Duration(seconds: 2));
+      expect(lyrics.textLines.last.parts.first.text, 'line 2');
     });
   });
 
@@ -62,9 +70,8 @@ void main() {
 
     test('copyWith replaces lyrics and flags', () {
       final lyrics = createLyrics();
-      final copy = LyricsState(
-        lyrics: null,
-      ).copyWith(lyrics: lyrics, hasError: true, isLyricsViewOpened: true);
+      final copy = LyricsState(lyrics: null)
+          .copyWith(lyrics: lyrics, hasError: true, isLyricsViewOpened: true);
 
       expect(copy.lyrics, same(lyrics));
       expect(copy.hasError, isTrue);

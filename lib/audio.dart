@@ -164,14 +164,7 @@ class AudioManager {
 
       final List<TextLine> textLines = List.empty(growable: true);
       for (var part in response.lyrics) {
-        textLines.add(
-          TextLine(
-            characterId: 0,
-            start: Duration(milliseconds: part.startMs),
-            end: Duration(milliseconds: part.endMs),
-            text: part.lines.join("\n"),
-          ),
-        );
+        textLines.add(TextLine(characterId: 0, text: part.lines.join("\n")));
       }
 
       return Lyrics(characters: [Character(id: 0)], textLines: textLines);

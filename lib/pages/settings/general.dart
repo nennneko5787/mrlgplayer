@@ -33,6 +33,12 @@ class GeneralSettingsPageState extends ConsumerState<GeneralSettingsPage> {
               child: Column(
                 children: [
                   RadioListTile<LyricsProviderType>(
+                    title: const Text("MiDB"),
+                    subtitle: const Text("azswkhn.f5.si に問い合わせを行います。"),
+                    value: LyricsProviderType.midb,
+                    enabled: false,
+                  ),
+                  RadioListTile<LyricsProviderType>(
                     title: const Text("ボカコレアプリ"),
                     subtitle: const Text(
                       "設定→アカウントよりニコニコ動画にログインする必要があります。また、一般会員は１ヶ月に歌詞を取得できる回数が制限されています。",
@@ -41,16 +47,23 @@ class GeneralSettingsPageState extends ConsumerState<GeneralSettingsPage> {
                   ),
                   RadioListTile<LyricsProviderType>(
                     title: const Text("プチリリ"),
+                    subtitle: const Text(
+                      "検索にレートリミットが存在するため、また正しい歌詞の選択のために一度MiDBに問い合わせを行います。",
+                    ),
                     value: LyricsProviderType.petitLyrics,
                   ),
                   RadioListTile<LyricsProviderType>(
                     title: const Text("Genius"),
+                    subtitle: const Text("正しい歌詞の選択のために一度MiDBに問い合わせを行います。"),
                     value: LyricsProviderType.genius,
                   ),
                   const Divider(),
                   Center(
                     child: Column(
                       children: [
+                        const Text(
+                          "MiDBへ収録されている歌詞(同期ポイントを除く)は全て収録許可をいただいています。",
+                        ),
                         const Text("本アプリはボカコレアプリ及び株式会社ドワンゴとは一切関係ありません。"),
                         const Text("本アプリはプチリリ及び株式会社シンクパワーとは一切関係ありません。"),
                         const Text(

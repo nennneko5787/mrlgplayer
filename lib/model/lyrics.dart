@@ -1,6 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
-enum LyricsProviderType { nicovideo, petitLyrics, genius }
+enum LyricsProviderType { midb, nicovideo, petitLyrics, genius }
 
 class Character {
   final int id;
@@ -11,17 +11,25 @@ class Character {
   Character({required this.id, this.align, this.color, this.name});
 }
 
-class TextLine {
-  final int characterId;
+class TextPart {
   final Duration? start;
   final Duration? end;
   final String text;
 
+  TextPart({this.start, this.end, required this.text});
+}
+
+class TextLine {
+  final int characterId;
+  final String? text;
+  final List<TextPart> parts;
+  final List<TextLine> child;
+
   TextLine({
     required this.characterId,
-    this.start,
-    this.end,
-    required this.text,
+    this.text,
+    this.parts = const [],
+    this.child = const [],
   });
 }
 

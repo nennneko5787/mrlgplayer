@@ -105,13 +105,17 @@ class LyricsWidgetState extends ConsumerState<LyricsWidget> {
                       ),
                     ),
                     for (final tl in lyrics.textLines)
-                      Text(
-                        tl.text,
-                        style: Theme.of(context).textTheme.headlineMedium!,
-                        textAlign:
-                            lyrics.characters[tl.characterId].align ??
-                            TextAlign.left,
-                      ),
+                      (tl.text != null)
+                          ? Text(
+                              tl.text!,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .headlineMedium!,
+                              textAlign:
+                                  lyrics.characters[tl.characterId].align ??
+                                  TextAlign.left,
+                            )
+                          : const SizedBox(),
                     Text('歌詞プロバイダー: ${settings.lyricsProvider.name}'),
                   ],
                 ),
